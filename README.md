@@ -1,8 +1,10 @@
 # 🎬 Taller 2 - Aplicación de Películas (Ionic + NestJS)
 
-Este proyecto consta de dos partes principales:
+Este proyecto consta de estas partes:
 1. **`peliculas-backend`**: API REST desarrollada con **NestJS**, **Prisma ORM** y SQLite.
-2. **`peliculas-ionic`**: Frontend multiplataforma desarrollado con **Ionic Framework (Vue 3)** y **Capacitor** para despliegue nativo en Android.
+2. **`peliculas-aspnet`**: la misma API en **ASP.NET Core**, Entity Framework Core y SQLite. Los pasos están en [peliculas-aspnet/README.md](peliculas-aspnet/README.md).
+3. **`peliculas-ionic`**: Frontend multiplataforma desarrollado con **Ionic Framework (Vue 3)** y **Capacitor** para despliegue nativo en Android.
+4. **`peliculas-frontend`**: cliente web Vue. Junto con Ionic, llama por defecto a la API de ASP.NET Core en `http://localhost:5080`.
 
 ---
 
@@ -64,6 +66,24 @@ El backend corre por defecto en **`http://localhost:3000`**.
 
 5. Verifica que responda en tu navegador o cliente HTTP ingresando a:
    `http://localhost:3000`
+
+---
+
+## Backend ASP.NET Core
+
+La API equivalente escucha en **`http://localhost:5080`**. Guía completa, Swagger y migraciones: [peliculas-aspnet/README.md](peliculas-aspnet/README.md).
+
+Vue e Ionic ya apuntan a esta API. Basta con tenerla encendida y arrancar cada cliente:
+
+```bash
+cd peliculas-ionic
+npm run dev
+```
+
+```bash
+cd peliculas-frontend
+npm run dev
+```
 
 ---
 
@@ -133,6 +153,8 @@ taller2/
 ├── peliculas-backend/    # Servidor NestJS + Prisma
 │   ├── src/              # Controladores, módulos y servicios REST
 │   └── prisma/           # Esquema de la base de datos SQLite
+├── peliculas-aspnet/     # La misma API en ASP.NET Core + EF Core
+├── peliculas-frontend/   # Cliente web Vue
 └── peliculas-ionic/      # Cliente Ionic Vue 3 + Capacitor
     ├── src/              # Vistas Vue, servicios HTTP y componentes
     └── android/          # Proyecto nativo Android generado por Capacitor
