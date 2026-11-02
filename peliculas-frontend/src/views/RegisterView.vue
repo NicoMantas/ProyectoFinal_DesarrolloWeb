@@ -1,18 +1,20 @@
 <script setup>
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
+import { API_BASE_URL } from '../services/api';
 
 const router = useRouter();
 const nombre = ref('');
 const email = ref('');
 const password = ref('');
+const showPassword = ref(false);
 const error = ref('');
 
 async function register() {
   error.value = '';
 
   try {
-    const response = await fetch('http://localhost:3000/auth/register', {
+    const response = await fetch(`${API_BASE_URL}/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -38,9 +40,16 @@ async function register() {
 </script>
 
 <template>
-  <main class="auth-container">
-    <div class="auth-card">
-      <h2>Registro</h2>
+  <main class="auth-screen">
+    <section class="auth-hero">
+      <p class="eyebrow">Nueva butaca</p>
+      <h1>Guarda lo que quieres volver a ver.</h1>
+      <p>Crea tu cuenta y arma una colección con nombre, sinopsis e imagen.</p>
+    </section>
+
+    <section class="auth-panel">
+      <p class="eyebrow">Registro</p>
+      <h2>Crear cuenta</h2>
 
       <form @submit.prevent="register">
         <label>
@@ -55,7 +64,31 @@ async function register() {
 
         <label>
           Contraseña
-          <input v-model="password" type="password" placeholder="********" required />
+          <span class="password-field">
+            <input
+              v-model="password"
+              :type="showPassword ? 'text' : 'password'"
+              placeholder="Una contraseña"
+              required
+            />
+            <button
+              type="button"
+              class="password-toggle"
+              :aria-label="showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+              @click="showPassword = !showPassword"
+            >
+              <svg v-if="showPassword" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M3 3l18 18" />
+                <path d="M10.6 10.6a3 3 0 0 0 4.2 4.2" />
+                <path d="M9.9 5.1A10.8 10.8 0 0 1 12 5c6.5 0 10 7 10 7a18.5 18.5 0 0 1-3.2 4.4" />
+                <path d="M6.1 6.1C3.8 7.8 2 12 2 12s3.5 7 10 7a10.8 10.8 0 0 0 4.1-.8" />
+              </svg>
+              <svg v-else viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+            </button>
+          </span>
         </label>
 
         <button type="submit">Registrarme</button>
@@ -67,61 +100,6 @@ async function register() {
         ¿Ya tienes cuenta?
         <router-link to="/login">Inicia sesión</router-link>
       </p>
-    </div>
+    </section>
   </main>
 </template>
-
-<style scoped>
-.auth-container {
-  min-height: 100vh;
-  display: grid;
-  place-items: center;
-  background: #f4f6fb;
-}
-
-.auth-card {
-  width: min(420px, 90vw);
-  background: white;
-  border-radius: 16px;
-  padding: 24px;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
-}
-
-form {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-label {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  font-weight: 600;
-}
-
-input,
-button {
-  padding: 10px 12px;
-  border-radius: 10px;
-  border: 1px solid #d0d7e6;
-}
-
-button {
-  background: #10b981;
-  color: white;
-  border: none;
-  cursor: pointer;
-  font-weight: 600;
-}
-
-.error {
-  color: #b91c1c;
-  margin-top: 12px;
-}
-
-.switch-link {
-  text-align: center;
-  margin-top: 14px;
-}
-</style>
