@@ -21,6 +21,7 @@
       </div>
 
       <template v-else>
+        <img v-if="form.imagen" class="form-preview" :src="form.imagen" alt="Vista previa" />
         <ion-item>
           <ion-input label="Nombre" label-placement="stacked" v-model="form.nombre" />
         </ion-item>
@@ -31,7 +32,7 @@
           <ion-input label="URL de la imagen" label-placement="stacked" v-model="form.imagen" />
         </ion-item>
 
-        <ion-button expand="block" class="ion-margin-top" :disabled="!esValido" @click="guardar">
+        <ion-button expand="block" class="ion-margin-top save-button" :disabled="!esValido" @click="guardar">
           Guardar
         </ion-button>
       </template>
@@ -77,7 +78,9 @@ watch(
   },
 );
 
-const esValido = computed(() => form.nombre.trim() !== '' && form.sinopsis.trim() !== '');
+const esValido = computed(() =>
+  form.nombre.trim() !== '' && form.sinopsis.trim() !== '' && form.imagen.trim() !== '',
+);
 
 function cerrarModal() {
   emit('close');
@@ -90,6 +93,20 @@ function guardar() {
 </script>
 
 <style scoped>
+ion-modal {
+  --width: min(560px, 100%);
+  --height: min(760px, 100%);
+  --border-radius: 18px;
+}
+
+@media (max-width: 576px) {
+  ion-modal {
+    --width: 100%;
+    --height: 100%;
+    --border-radius: 0;
+  }
+}
+
 .movie-detail {
   display: flex;
   flex-direction: column;
@@ -108,15 +125,32 @@ function guardar() {
 
 .movie-detail h2 {
   margin: 0;
-  font-size: 1.9rem;
+  font-size: clamp(1.4rem, 5vw, 1.9rem);
   font-weight: 800;
   line-height: 1.2;
+  overflow-wrap: anywhere;
 }
 
 .movie-detail p {
   margin: 0;
-  color: #cbd5e1;
+  color: #cfc6b8;
   line-height: 1.7;
   font-size: 0.98rem;
+}
+
+.form-preview {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  border-radius: 18px;
+  margin-bottom: 14px;
+  background: #1c2433;
+}
+
+.save-button {
+  --background: #e7b15a;
+  --background-hover: #cb9c4f;
+  --color: #1c1408;
+  font-weight: 700;
 }
 </style>
