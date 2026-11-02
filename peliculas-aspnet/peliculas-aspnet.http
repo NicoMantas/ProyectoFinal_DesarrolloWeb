@@ -1,0 +1,38 @@
+@baseUrl = http://localhost:5080
+
+### Registro
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "nombre": "Ada",
+  "email": "ada@ejemplo.com",
+  "password": "secreta"
+}
+
+### Login
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "ada@ejemplo.com",
+  "password": "secreta"
+}
+
+### Perfil
+GET {{baseUrl}}/auth/profile
+Authorization: Bearer {{token}}
+
+### Crear película
+POST {{baseUrl}}/pelicula
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "nombre": "Dune",
+  "sinopsis": "Un desierto y un destino.",
+  "imagen": "https://example.com/dune.jpg"
+}
+
+### Listado
+GET {{baseUrl}}/pelicula?nombre=dune&pagina=1&limite=5
