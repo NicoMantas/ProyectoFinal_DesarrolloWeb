@@ -1,13 +1,17 @@
 import { Preferences } from '@capacitor/preferences';
 
+const API_PORT = '5080';
+
 export function getApiBaseUrl(): string {
   const configuredUrl = import.meta.env.VITE_API_URL;
   if (configuredUrl) return configuredUrl.replace(/\/$/, '');
 
   const hostname = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
+  const nativePlatform = typeof window !== 'undefined'
+    && Boolean((window as Window & { Capacitor?: { isNativePlatform?: () => boolean } }).Capacitor?.isNativePlatform?.());
 
-  if (hostname === 'localhost' || hostname === '127.0.0.1') {
-    return 'http://localhost:3000';
+  if (nativePlatform && (hostname === 'localhost' || hostname === '127.0.0.1')) {
+    return `http://10.0.2.2:${API_PORT}`;
   }
 
   if (
@@ -16,10 +20,10 @@ export function getApiBaseUrl(): string {
     hostname.startsWith('172.') ||
     hostname === '10.0.2.2'
   ) {
-    return `http://${hostname}:3000`;
+    return `http://${hostname}:${API_PORT}`;
   }
 
-  return 'http://localhost:3000';
+  return `http://localhost:${API_PORT}`;
 }
 
 export const BASE_URL = getApiBaseUrl();
@@ -40,7 +44,8 @@ export async function clearToken(): Promise<void> {
 
 export async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
   const token = await getToken();
-  const fullUrl = `${BASE_URL}${path}`;
+  const baseUrl = getApiBaseUrl();
+  const fullUrl = `${baseUrl}${path}`;
 
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
@@ -62,7 +67,7 @@ export async function apiFetch<T>(path: string, options: RequestInit = {}): Prom
     return (await response.json()) as T;
   } catch (err: unknown) {
     if (err instanceof TypeError && err.message.includes('Failed to fetch')) {
-      throw new Error(`No se pudo conectar con el backend (${BASE_URL}). Verifica que esté corriendo NestJS en http://localhost:3000.`);
+      throw new Error(`No se pudo conectar con el backend (${baseUrl}). Verifica que la API de ASP.NET Core esté corriendo en http://localhost:5080.`);
     }
     throw err;
   }

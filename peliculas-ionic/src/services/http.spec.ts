@@ -45,7 +45,7 @@ describe('http auth utilities', () => {
     await apiFetch('/pelicula');
 
     expect(fetchMock).toHaveBeenCalledWith(
-      'http://localhost:3000/pelicula',
+      'http://localhost:5080/pelicula',
       expect.objectContaining({
         headers: expect.objectContaining({
           Authorization: 'Bearer jwt-token-123',
@@ -68,7 +68,7 @@ describe('http auth utilities', () => {
       writable: true,
     });
 
-    expect(getApiBaseUrl()).toBe('http://10.0.2.2:3000');
+    expect(getApiBaseUrl()).toBe('http://10.0.2.2:5080');
 
     Object.defineProperty(window, 'location', {
       value: originalLocation,

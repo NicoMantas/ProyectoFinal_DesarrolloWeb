@@ -1,16 +1,19 @@
 <template>
   <ion-page>
-    <ion-content class="auth-page ion-padding">
-      <div class="auth-shell">
-        <div class="auth-header">
-          <p class="eyebrow">Mi colección</p>
-          <h1>{{ isRegister ? 'Crear cuenta' : 'Iniciar sesión' }}</h1>
+    <ion-content class="auth-page" :fullscreen="true">
+      <div class="auth-screen">
+        <section class="auth-hero">
+          <p class="eyebrow">{{ isRegister ? 'Nueva butaca' : 'Mi colección' }}</p>
+          <h1>{{ isRegister ? 'Guarda lo que quieres volver a ver.' : 'La sala está lista.' }}</h1>
           <p>
-            {{ isRegister ? 'Regístrate para guardar tu colección favorita.' : 'Inicia sesión para seguir disfrutando tus películas.' }}
+            {{ isRegister ? 'Crea tu cuenta y arma una colección con nombre, sinopsis e imagen.' : 'Entra para ver, guardar y ordenar las películas de tu colección.' }}
           </p>
-        </div>
+        </section>
 
+        <section class="auth-panel">
         <div class="auth-card">
+          <p class="eyebrow">{{ isRegister ? 'Registro' : 'Bienvenido' }}</p>
+          <h2>{{ isRegister ? 'Crear cuenta' : 'Iniciar sesión' }}</h2>
           <ion-segment :value="mode" @ionChange="handleModeChange" class="auth-segment">
             <ion-segment-button value="login">
               <ion-label>Login</ion-label>
@@ -67,6 +70,7 @@
             </ion-button>
           </form>
         </div>
+        </section>
       </div>
     </ion-content>
   </ion-page>
@@ -165,54 +169,87 @@ async function submitRegister() {
 
 <style scoped>
 .auth-page {
-  --background: #0b1220;
+  --background:
+    radial-gradient(circle at 20% 0%, rgba(231, 177, 90, 0.22), transparent 34%),
+    #0c1018;
 }
 
-.auth-shell {
-  max-width: 520px;
-  margin: 0 auto;
+.auth-page::part(scroll) {
+  display: flex;
+  flex-direction: column;
+}
+
+.auth-screen {
+  flex: 1;
   min-height: 100%;
+  display: grid;
+  grid-template-columns: minmax(280px, 1.05fr) minmax(420px, 640px);
+}
+
+.auth-hero,
+.auth-panel {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 20px;
+  padding: 48px clamp(28px, 4vw, 64px);
+  box-sizing: border-box;
 }
 
-.auth-header {
-  text-align: left;
-  padding: 8px 6px 0;
+.auth-hero {
+  align-items: center;
+  text-align: center;
+  background:
+    linear-gradient(180deg, rgba(12, 16, 24, 0.15), rgba(12, 16, 24, 0.72)),
+    radial-gradient(circle at 30% 30%, rgba(231, 177, 90, 0.35), transparent 42%);
+}
+
+.auth-panel {
+  align-items: stretch;
 }
 
 .eyebrow {
   margin: 0;
-  color: #8c8ca1;
+  color: #e7b15a;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   font-size: 0.72rem;
 }
 
-h1 {
+h1,
+h2 {
   margin: 8px 0 0;
-  font-size: 2rem;
-  font-weight: 700;
+  font-family: Palatino, Georgia, serif;
+  font-weight: 600;
   color: #f8fafc;
-  line-height: 1.15;
+  line-height: 1.05;
 }
 
-p {
-  margin: 10px 0 0;
-  max-width: 360px;
-  color: #c8d0e0;
+h1 {
+  max-width: 12ch;
+  font-size: clamp(2.4rem, 4.4vw, 4.2rem);
+}
+
+h2 {
+  margin-bottom: 18px;
+  font-size: clamp(1.8rem, 3vw, 2.4rem);
+}
+
+.auth-hero p,
+.auth-panel p {
+  margin: 14px 0 0;
+  max-width: 36ch;
+  color: #d9d0c3;
   line-height: 1.5;
-  font-size: 0.98rem;
+  font-size: 1rem;
 }
 
 .auth-card {
-  background: rgba(15, 23, 42, 0.78);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 20px;
-  padding: 18px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+  width: 100%;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  box-shadow: none;
 }
 
 .auth-segment {
@@ -231,7 +268,7 @@ ion-item {
   --background: rgba(255, 255, 255, 0.04);
   --border-radius: 16px;
   --inner-border-width: 0;
-  --highlight-color-focused: #a855f7;
+  --highlight-color-focused: #e7b15a;
   border-radius: 16px;
   margin-bottom: 4px;
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02);
@@ -244,13 +281,14 @@ ion-item {
 .password-item ion-button {
   --padding-start: 8px;
   --padding-end: 8px;
-  color: #c4b5fd;
+  color: #e7b15a;
 }
 
 .submit-button {
   margin-top: 12px;
-  --background: linear-gradient(135deg, #7c3aed, #a855f7);
-  --background-hover: linear-gradient(135deg, #6d28d9, #9333ea);
+  --background: #e7b15a;
+  --background-hover: #cb9c4f;
+  --color: #1c1408;
   --box-shadow: none;
   border-radius: 14px;
   font-weight: 700;
@@ -258,10 +296,42 @@ ion-item {
 }
 
 ion-segment-button {
-  --indicator-color: rgba(168, 85, 247, 0.18);
-  --color: #a9b4c9;
-  --color-checked: #f8fafc;
-  --background-checked: rgba(168, 85, 247, 0.12);
+  --indicator-color: rgba(231, 177, 90, 0.2);
+  --color: #b7aea0;
+  --color-checked: #f4efe6;
+  --background-checked: rgba(231, 177, 90, 0.14);
   border-radius: 12px;
+  min-width: 0;
+}
+
+@media (max-width: 860px) {
+  .auth-screen {
+    grid-template-columns: 1fr;
+  }
+
+  .auth-hero,
+  .auth-panel {
+    padding: 28px 20px;
+  }
+
+  .auth-hero {
+    min-height: 220px;
+  }
+
+  h1 {
+    max-width: 14ch;
+    font-size: clamp(2rem, 9vw, 3rem);
+  }
+}
+
+@media (max-width: 380px) {
+  h1 {
+    font-size: 1.7rem;
+  }
+
+  .auth-hero p,
+  .auth-panel p {
+    font-size: 0.92rem;
+  }
 }
 </style>

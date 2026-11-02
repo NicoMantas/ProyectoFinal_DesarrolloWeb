@@ -12,7 +12,13 @@ const router = useRouter();
 
 const usuario = computed(() => {
   const raw = localStorage.getItem('usuario');
-  return raw ? JSON.parse(raw) : null;
+  if (!raw) return null;
+
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
 });
 
 const peliculas = ref([]);
@@ -31,6 +37,9 @@ const form = ref({
   imagen: '',
 });
 const editando = ref(false);
+const imagenRota = ref({});
+let requestId = 0;
+let searchTimer;
 
 function resetFormulario() {
   form.value = {
@@ -42,23 +51,47 @@ function resetFormulario() {
   editando.value = false;
 }
 
+function marcarImagenRota(id) {
+  imagenRota.value = { ...imagenRota.value, [id]: true };
+}
+
 async function cargarPeliculas() {
+  const id = ++requestId;
   loading.value = true;
   error.value = '';
 
   try {
     const respuesta = await ObtenerPeliculas(search.value, pagina.value, limite.value);
+    if (id !== requestId) return;
+
+    const totalRegistros = respuesta.meta?.total ?? 0;
+    const paginas = respuesta.meta?.totalPaginas ?? 1;
+
+    if (totalRegistros > 0 && paginas > 0 && pagina.value > paginas) {
+      pagina.value = paginas;
+      return cargarPeliculas();
+    }
+
     peliculas.value = respuesta.data ?? [];
-    totalPaginas.value = respuesta.meta?.totalPaginas ?? 1;
-    total.value = respuesta.meta?.total ?? 0;
+    totalPaginas.value = Math.max(paginas, 1);
+    total.value = totalRegistros;
   } catch (err) {
+    if (id !== requestId) return;
     error.value = err?.message || 'No se pudieron cargar las películas';
   } finally {
-    loading.value = false;
+    if (id === requestId) loading.value = false;
   }
 }
 
 watch(search, () => {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => {
+    pagina.value = 1;
+    cargarPeliculas();
+  }, 300);
+});
+
+watch(limite, () => {
   pagina.value = 1;
   cargarPeliculas();
 });
@@ -146,230 +179,86 @@ onMounted(() => {
 </script>
 
 <template>
-  <main class="home-page">
+  <main class="home-screen">
     <header class="topbar">
-      <div>
-        <h1>Películas</h1>
-        <p v-if="usuario">Bienvenido, {{ usuario.nombre }}</p>
+      <div class="brand">
+        <span class="mark">P</span>
+        <div>
+          <p class="eyebrow">Colección</p>
+          <h1>Películas</h1>
+          <p v-if="usuario">Hola, {{ usuario.nombre }}</p>
+        </div>
       </div>
-      <button class="logout-btn" @click="logout">Cerrar sesión</button>
+      <div class="userbox">
+        <button class="ghost-btn" @click="logout">Cerrar sesión</button>
+      </div>
     </header>
 
-    <section class="panel">
-      <h2>{{ editando ? 'Editar película' : 'Nueva película' }}</h2>
+    <div class="layout">
+      <section class="panel">
+        <h2>{{ editando ? 'Editar película' : 'Nueva película' }}</h2>
 
-      <form class="movie-form" @submit.prevent="guardarPelicula">
-        <input v-model="form.nombre" type="text" placeholder="Nombre" />
-        <textarea v-model="form.sinopsis" placeholder="Sinopsis" rows="3"></textarea>
-        <input v-model="form.imagen" type="text" placeholder="URL de la imagen" />
+        <form class="movie-form" @submit.prevent="guardarPelicula">
+          <input v-model="form.nombre" type="text" placeholder="Nombre" />
+          <textarea v-model="form.sinopsis" placeholder="Sinopsis" rows="4"></textarea>
+          <input v-model="form.imagen" type="url" placeholder="URL de la imagen" />
 
-        <div class="form-actions">
-          <button type="submit" class="primary-btn">
-            {{ editando ? 'Guardar cambios' : 'Crear película' }}
-          </button>
-          <button v-if="editando" type="button" class="secondary-btn" @click="resetFormulario">
-            Cancelar
-          </button>
-        </div>
-      </form>
-
-      <p v-if="error" class="error">{{ error }}</p>
-      <p v-if="success" class="success">{{ success }}</p>
-    </section>
-
-    <section class="panel">
-      <div class="toolbar">
-        <input v-model="search" type="search" placeholder="Buscar por nombre" />
-        <select v-model="limite" @change="pagina = 1; cargarPeliculas()">
-          <option :value="5">5 por página</option>
-          <option :value="10">10 por página</option>
-          <option :value="15">15 por página</option>
-        </select>
-      </div>
-
-      <p class="summary">Mostrando {{ peliculas.length }} de {{ total }} registros</p>
-
-      <div v-if="loading" class="empty-state">Cargando...</div>
-      <div v-else-if="peliculas.length === 0" class="empty-state">No hay películas para mostrar.</div>
-
-      <div v-else class="movies-grid">
-        <article v-for="pelicula in peliculas" :key="pelicula.id" class="movie-card">
-          <img v-if="pelicula.imagen" :src="pelicula.imagen" :alt="pelicula.nombre" />
-          <div class="movie-content">
-            <h3>{{ pelicula.nombre }}</h3>
-            <p>{{ pelicula.sinopsis }}</p>
-            <div class="card-actions">
-              <button class="secondary-btn" @click="editarPelicula(pelicula)">Editar</button>
-              <button class="danger-btn" @click="borrarPelicula(pelicula.id)">Eliminar</button>
-            </div>
+          <div class="form-actions">
+            <button type="submit" class="primary-btn">
+              {{ editando ? 'Guardar cambios' : 'Crear película' }}
+            </button>
+            <button v-if="editando" type="button" class="ghost-btn" @click="resetFormulario">
+              Cancelar
+            </button>
           </div>
-        </article>
-      </div>
+        </form>
 
-      <div v-if="totalPaginas > 1" class="pagination">
-        <button :disabled="pagina === 1" @click="cambiarPagina(pagina - 1)">Anterior</button>
-        <span>Página {{ pagina }} / {{ totalPaginas }}</span>
-        <button :disabled="pagina === totalPaginas" @click="cambiarPagina(pagina + 1)">Siguiente</button>
-      </div>
-    </section>
+        <p v-if="error" class="error">{{ error }}</p>
+        <p v-if="success" class="success">{{ success }}</p>
+      </section>
+
+      <section class="panel">
+        <div class="toolbar">
+          <input v-model="search" type="search" placeholder="Buscar por nombre" />
+          <select v-model.number="limite">
+            <option :value="5">5 por página</option>
+            <option :value="10">10 por página</option>
+            <option :value="15">15 por página</option>
+          </select>
+        </div>
+
+        <p class="summary">Mostrando {{ peliculas.length }} de {{ total }} registros</p>
+
+        <div v-if="loading" class="empty-state">Cargando la cartelera...</div>
+        <div v-else-if="peliculas.length === 0" class="empty-state">No hay películas para mostrar.</div>
+
+        <div v-else class="catalog">
+          <article v-for="pelicula in peliculas" :key="pelicula.id" class="poster">
+            <img
+              v-if="pelicula.imagen && !imagenRota[pelicula.id]"
+              class="poster-media"
+              :src="pelicula.imagen"
+              :alt="pelicula.nombre"
+              @error="marcarImagenRota(pelicula.id)"
+            />
+            <div v-else class="poster-fallback">{{ pelicula.nombre.slice(0, 1) }}</div>
+            <div class="poster-body">
+              <h3>{{ pelicula.nombre }}</h3>
+              <p>{{ pelicula.sinopsis }}</p>
+              <div class="card-actions">
+                <button class="ghost-btn" @click="editarPelicula(pelicula)">Editar</button>
+                <button class="danger-btn" @click="borrarPelicula(pelicula.id)">Eliminar</button>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <div v-if="totalPaginas > 1" class="pagination">
+          <button class="ghost-btn" :disabled="pagina === 1" @click="cambiarPagina(pagina - 1)">Anterior</button>
+          <span>Página {{ pagina }} / {{ totalPaginas }}</span>
+          <button class="ghost-btn" :disabled="pagina === totalPaginas" @click="cambiarPagina(pagina + 1)">Siguiente</button>
+        </div>
+      </section>
+    </div>
   </main>
 </template>
-
-<style scoped>
-.home-page {
-  min-height: 100vh;
-  padding: 32px 20px;
-  background: linear-gradient(135deg, #eef4ff, #f8fafc);
-  color: #0f172a;
-}
-
-.topbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 24px;
-  gap: 16px;
-}
-
-.topbar h1 {
-  margin: 0 0 6px;
-}
-
-.panel {
-  background: white;
-  border-radius: 18px;
-  box-shadow: 0 12px 26px rgba(15, 23, 42, 0.08);
-  padding: 20px;
-  margin-bottom: 24px;
-}
-
-.movie-form {
-  display: grid;
-  gap: 12px;
-}
-
-input,
-textarea,
-select,
-button {
-  border-radius: 10px;
-  border: 1px solid #dbe3f0;
-  font: inherit;
-}
-
-input,
-textarea,
-select {
-  width: 100%;
-  padding: 10px 12px;
-  box-sizing: border-box;
-}
-
-.form-actions,
-.card-actions,
-.pagination,
-.toolbar {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-}
-
-.toolbar {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 12px;
-}
-
-.toolbar input,
-.toolbar select {
-  flex: 1 1 180px;
-  min-width: 0;
-}
-
-button {
-  padding: 10px 14px;
-  cursor: pointer;
-  border: none;
-  transition: 0.2s ease;
-}
-
-.primary-btn {
-  background: #2563eb;
-  color: white;
-}
-
-.secondary-btn {
-  background: #e2e8f0;
-  color: #0f172a;
-}
-
-.danger-btn,
-.logout-btn {
-  background: #ef4444;
-  color: white;
-}
-
-.error {
-  color: #b91c1c;
-  margin-top: 10px;
-  font-weight: 600;
-}
-
-.success {
-  color: #15803d;
-  margin-top: 10px;
-  font-weight: 600;
-}
-
-.summary {
-  margin: 12px 0 18px;
-  color: #475569;
-}
-
-.movies-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 18px;
-}
-
-.movie-card {
-  border: 1px solid #e2e8f0;
-  border-radius: 16px;
-  overflow: hidden;
-  background: #fff;
-}
-
-.movie-card img {
-  width: 100%;
-  height: 180px;
-  object-fit: cover;
-  display: block;
-  background: #e2e8f0;
-}
-
-.movie-content {
-  padding: 16px;
-}
-
-.movie-content h3 {
-  margin-top: 0;
-}
-
-.card-actions {
-  justify-content: flex-end;
-  margin-top: 14px;
-}
-
-.pagination {
-  justify-content: center;
-  margin-top: 18px;
-}
-
-.empty-state {
-  text-align: center;
-  padding: 20px;
-  color: #64748b;
-}
-</style>
