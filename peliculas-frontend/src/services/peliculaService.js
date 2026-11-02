@@ -1,4 +1,6 @@
-const API_URL = 'http://localhost:3000/pelicula';
+import { API_BASE_URL } from './api';
+
+const API_URL = `${API_BASE_URL}/pelicula`;
 
 function getAuthHeaders(extraHeaders = {}) {
   const token = localStorage.getItem('jwt_token');
