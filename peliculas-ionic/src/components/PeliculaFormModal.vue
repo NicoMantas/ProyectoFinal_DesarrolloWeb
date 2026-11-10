@@ -26,7 +26,7 @@
           <ion-input label="Nombre" label-placement="stacked" v-model="form.nombre" />
         </ion-item>
         <ion-item>
-          <ion-textarea label="Sinopsis" label-placement="stacked" v-model="form.sinopsis" :auto-grow="true" />
+        <ion-textarea label="Sinopsis" label-placement="stacked" v-model="form.sinopsis" :auto-grow="true" :rows="1" />      
         </ion-item>
         <ion-item>
           <ion-input label="URL de la imagen" label-placement="stacked" v-model="form.imagen" />
@@ -93,10 +93,11 @@ function guardar() {
 </script>
 
 <style scoped>
+/* Recuadro grande (modal): esquinas más redondeadas y más largo hacia abajo */
 ion-modal {
   --width: min(560px, 100%);
-  --height: min(760px, 100%);
-  --border-radius: 18px;
+  --height: min(840px, 100%);   /* antes 760px */
+  --border-radius: 30px;        /* antes 18px */
 }
 
 @media (max-width: 576px) {
@@ -105,6 +106,45 @@ ion-modal {
     --height: 100%;
     --border-radius: 0;
   }
+}
+
+/* Recuadros de cada campo (Nombre, Sinopsis, URL) */
+ion-item {
+  --border-radius: 16px;
+  --min-height: 68px;
+  --padding-bottom: 20px;
+  --border-width: 0;
+  --inner-border-width: 0;
+  position: relative;
+  margin-bottom: 14px;
+}
+
+ion-input,
+ion-textarea {
+  --padding-top: 0;
+  --padding-bottom: 0;
+  min-height: 44px;
+}
+
+ion-item::part(native) {
+  background-image: linear-gradient(#fcfcfc, #fcfcfc);  /* color de la línea */
+  background-repeat: no-repeat;
+  background-size: calc(100% - 32px) 1px;               /* 32px = 16px de margen a cada lado; 1px = grosor */
+  background-position: 16px calc(100% - 10px);          /* 16px = desde la izquierda; 12px = altura desde abajo */
+}
+
+/* Etiquetas con la misma tipografía de "Mi colección" (.eyebrow del HomePage) */
+:deep(.label-text-wrapper) {
+  transform: none !important;   /* evita que Ionic reduzca el tamaño de la etiqueta */
+  max-width: 100%;
+}
+
+:deep(.label-text) {
+  color: #e7b15a;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
 }
 
 .movie-detail {
